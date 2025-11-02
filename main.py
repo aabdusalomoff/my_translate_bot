@@ -3,7 +3,6 @@ from googletrans import Translator
 from dotenv import load_dotenv
 import os
 
-# .env faylidan o'zgaruvchilarni yuklash
 load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
