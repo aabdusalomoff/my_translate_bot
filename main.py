@@ -3,14 +3,10 @@ from googletrans import Translator
 from dotenv import load_dotenv
 import os
 
-# Загружаем переменные из .env
+# .env faylidan o'zgaruvchilarni yuklash
 load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-
-if not TOKEN:
-    raise ValueError("❌ TELEGRAM_BOT_TOKEN не найден в .env")
-
 bot = telebot.TeleBot(TOKEN)
 translator = Translator()
 
@@ -18,17 +14,35 @@ translator = Translator()
 def start_message(message):
     bot.send_message(
         message.chat.id,
-        "Tarjimon botimga xush kelibsiz! 🇺🇿\n"
-        "O'zbekcha yozing — tarjima ingliz tilida chiqadi 🗽"
+        "🤖 Tarjimon botga xush kelibsiz!\n\n"
+        "O'zbekcha yozing — ingliz tiliga tarjima qilaman\n"
+        "Inglizcha yozing — o'zbek tiliga tarjima qilaman"
     )
 
 @bot.message_handler(func=lambda message: True)
 def translate_text(message):
     try:
-        translated = translator.translate(message.text, src='uz', dest='en')
-        bot.send_message(message.chat.id, f"🔤 Tarjima: {translated.text}")
+        text = message.text.strip()
+        
+        if len(text) > 4000:
+            bot.send_message(message.chat.id, "⚠️ Matn juda uzun. 4000 belgidan kamroq yuboring.")
+            return
+        
+        # Inglizcha matnni tekshirish
+        if any(char in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' for char in text):
+            # Inglizcha -> O'zbekcha
+            translated = translator.translate(text, src='en', dest='uz')
+            response = f"🇬🇧 EN → 🇺🇿 UZ\n\n{translated.text}"
+        else:
+            # O'zbekcha -> Inglizcha
+            translated = translator.translate(text, src='uz', dest='en')
+            response = f"🇺🇿 UZ → 🇬🇧 EN\n\n{translated.text}"
+        
+        bot.send_message(message.chat.id, response)
+        
     except Exception as e:
-        bot.send_message(message.chat.id, "⚠️ Xato yuz berdi. Qayta urinib ko‘ring.")
+        bot.send_message(message.chat.id, "⚠️ Xato yuz berdi. Qayta urinib ko'ring.")
 
-print("✅ Bot ishga tushdi...")
-bot.polling(none_stop=True)
+if __name__ == "__main__":
+    print("✅ Bot ishga tushdi...")
+    bot.polling(none_stop=True)
